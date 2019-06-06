@@ -40,7 +40,7 @@ data class HtmlInput (val host: List<String>, val port: String, val path :String
             val host = mutableListOf<String>()
             lateinit var port : String
             lateinit var path : String
-            XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenHtml)
+            XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                 val fieldName = xcp.currentName()
@@ -49,19 +49,19 @@ data class HtmlInput (val host: List<String>, val port: String, val path :String
 
 
                     HOST_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenHtml)
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenLocation)
                         while (xcp.nextToken() != XContentParser.Token.END_ARRAY) {
                             host.add(xcp.text())
                         }
                     }
 
                     PORT_FIELD ->{
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenHtml)
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenLocation)
                         port=xcp.text()
                     }
 
                     PATH_FIELD ->{
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenHtml)
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenLocation)
                         path=xcp.text()
                     }
 
