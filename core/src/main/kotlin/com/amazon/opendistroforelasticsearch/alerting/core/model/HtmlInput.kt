@@ -5,7 +5,7 @@ import org.elasticsearch.common.xcontent.*
 import org.elasticsearch.common.CheckedFunction
 import java.io.IOException
 
-data class HtmlInput (val host: List<String>, val port: String, val path :String) : Input {
+data class HtmlInput (val host: List<String>, val port: String, val path :String, val body :String) : Input {
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
@@ -13,6 +13,8 @@ data class HtmlInput (val host: List<String>, val port: String, val path :String
                 .field(HtmlInput.HOST_FIELD,host)
                 .field(HtmlInput.PORT_FIELD,port)
                 .field(HtmlInput.PATH_FIELD,path)
+                .field(HtmlInput.BODY_FIELD,body)
+                .endObject()
                 .endObject()
                 .endObject()
                 .endObject()
@@ -28,6 +30,7 @@ data class HtmlInput (val host: List<String>, val port: String, val path :String
         const val PORT_FIELD = "port"
         const val PATH_FIELD = "path"
         const val HTML_FIELD = "html"
+        const val BODY_FIELD = "body"
 
 
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("Html"), CheckedFunction { parseInner(it) })
@@ -40,6 +43,7 @@ data class HtmlInput (val host: List<String>, val port: String, val path :String
             val host = mutableListOf<String>()
             lateinit var port : String
             lateinit var path : String
+            lateinit var body : String
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -65,11 +69,16 @@ data class HtmlInput (val host: List<String>, val port: String, val path :String
                         path=xcp.text()
                     }
 
+                    BODY_FIELD ->{
+                    XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenLocation)
+                    body=xcp.text()
+                }
 
                 }
             }
 
-            return HtmlInput(host,port,path)
+            return HtmlInput(host,port,path
+            ,body)
         }
     }
 
