@@ -11,21 +11,21 @@ import java.io.IOException
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-data class HttpInput(val host: List<String>, val port: Int?, val path: String?, val body: String?) : Input {
+data class HttpInput(val host: List<String>, val port: Int, val path: String?, val body: String?) : Input {
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
-                .startObject(HttpInput.HTTP_FIELD)
-                .field(HttpInput.HOST_FIELD, host.toTypedArray())
-                .field(HttpInput.PORT_FIELD, port)
-                .field(HttpInput.PATH_FIELD, path)
-                .field(HttpInput.BODY_FIELD, body)
+                .startObject(HTTP_FIELD)
+                .field(HOST_FIELD, host.toTypedArray())
+                .field(PORT_FIELD, port)
+                .field(PATH_FIELD, path)
+                .field(BODY_FIELD, body)
                 .endObject()
                 .endObject()
     }
 // Probably need to change the name for this
     override fun name(): String {
-        return HttpInput.HTTP_FIELD
+        return HTTP_FIELD
     }
     companion object {
         const val HOST_FIELD = "host"
@@ -39,7 +39,7 @@ data class HttpInput(val host: List<String>, val port: Int?, val path: String?, 
         @JvmStatic @Throws(IOException::class)
         private fun parseInner(xcp: XContentParser): HttpInput {
             val host = mutableListOf<String>()
-            var port: Int? = null
+            var port: Int = -1
             var path: String? = null
             var body: String? = null
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)

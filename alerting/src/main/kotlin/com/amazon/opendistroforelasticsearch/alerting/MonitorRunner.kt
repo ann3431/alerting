@@ -18,7 +18,9 @@ package com.amazon.opendistroforelasticsearch.alerting
 import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertError
 import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertIndices
 import com.amazon.opendistroforelasticsearch.alerting.alerts.moveAlerts
+import com.amazon.opendistroforelasticsearch.alerting.client.HttpInputClient
 import com.amazon.opendistroforelasticsearch.alerting.core.JobRunner
+import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import com.amazon.opendistroforelasticsearch.alerting.core.model.ScheduledJob
 import com.amazon.opendistroforelasticsearch.alerting.core.model.ScheduledJob.Companion.SCHEDULED_JOBS_INDEX
 import com.amazon.opendistroforelasticsearch.alerting.core.model.SearchInput
@@ -77,12 +79,12 @@ import org.elasticsearch.common.component.AbstractLifecycleComponent
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.LoggingDeprecationHandler
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
-import org.elasticsearch.common.xcontent.ToXContent
-import org.elasticsearch.common.xcontent.XContentFactory
 import org.elasticsearch.common.xcontent.XContentHelper
 import org.elasticsearch.common.xcontent.XContentParser
-import org.elasticsearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 import org.elasticsearch.common.xcontent.XContentType
+import org.elasticsearch.common.xcontent.XContentFactory
+import org.elasticsearch.common.xcontent.ToXContent
+import org.elasticsearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.rest.RestStatus
 import org.elasticsearch.script.Script
@@ -291,6 +293,15 @@ class MonitorRunner(
                         }
                         val searchResponse: SearchResponse = client.suspendUntil { client.search(searchRequest, it) }
                         results += searchResponse.convertToMap()
+                    }
+                    is HttpInput -> {
+                        val httpInputClient = HttpInputClient()
+
+                        // TODO: Fix the client calling and response handling to overcome the permission error
+                        val httpInputResponse = httpInputClient.privilegedPublish(input)
+                        val httpInputResponseParser = XContentType.JSON.xContent().createParser(
+                                xContentRegistry, LoggingDeprecationHandler.INSTANCE, httpInputResponse.responseContent)
+                        results.add(httpInputResponseParser.map())
                     }
                     else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
