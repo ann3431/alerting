@@ -296,11 +296,9 @@ class MonitorRunner(
                     }
                     is HttpInput -> {
                         val httpInputClient = HttpInputClient()
-
-                        // TODO: Fix the client calling and response handling to overcome the permission error
-                        val httpInputResponse = httpInputClient.privilegedPublish(input)
+                        val httpInputResponse = httpInputClient.publish(input)
                         val httpInputResponseParser = XContentType.JSON.xContent().createParser(
-                                xContentRegistry, LoggingDeprecationHandler.INSTANCE, httpInputResponse.responseContent)
+                                xContentRegistry, LoggingDeprecationHandler.INSTANCE, httpInputResponse)
                         results.add(httpInputResponseParser.map())
                     }
                     else -> {

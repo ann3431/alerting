@@ -11,12 +11,12 @@ import java.io.IOException
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-data class HttpInput(val host: List<String>, val port: Int, val path: String?, val body: String?) : Input {
+data class HttpInput(val host: String, val port: Int, val path: String?, val body: String?) : Input {
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
                 .startObject(HTTP_FIELD)
-                .field(HOST_FIELD, host.toTypedArray())
+                .field(HOST_FIELD, host)
                 .field(PORT_FIELD, port)
                 .field(PATH_FIELD, path)
                 .field(BODY_FIELD, body)
@@ -31,14 +31,13 @@ data class HttpInput(val host: List<String>, val port: Int, val path: String?, v
         const val HOST_FIELD = "host"
         const val PORT_FIELD = "port"
         const val PATH_FIELD = "path"
-        const val HTTP_FIELD = "http"
         const val BODY_FIELD = "body"
-
+        const val HTTP_FIELD = "http"
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("http"), CheckedFunction { parseInner(it) })
 
         @JvmStatic @Throws(IOException::class)
         private fun parseInner(xcp: XContentParser): HttpInput {
-            val host = mutableListOf<String>()
+            var host = ""
             var port: Int = -1
             var path: String? = null
             var body: String? = null
@@ -49,10 +48,9 @@ data class HttpInput(val host: List<String>, val port: Int, val path: String?, v
                 xcp.nextToken()
                 when (fieldName) {
                     HOST_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp::getTokenLocation)
-                        while (xcp.nextToken() != XContentParser.Token.END_ARRAY) {
-                            host.add(xcp.text())
-                        }
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
+                                xcp::getTokenLocation)
+                        host = xcp.text()
                     }
                     PORT_FIELD -> {
                         XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_NUMBER, xcp.currentToken(),

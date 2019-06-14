@@ -81,9 +81,9 @@ class HttpInputClient {
     @Throws(Exception::class)
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
         var uri: URI?
-        val httpGetRequest = HttpGet("http://localhost:9200/_cluster/health")
-        uri = buildUri(input.host[0], input.port, input.path)
-        // httpGetRequest.uri = uri
+        val httpGetRequest = HttpGet()
+        uri = buildUri(input.host, input.port, input.path)
+        httpGetRequest.uri = uri
         return httpClient.execute(httpGetRequest)
     }
 
@@ -94,7 +94,7 @@ class HttpInputClient {
     private fun buildUri(host: String?, port: Int, path: String?): URI {
         try {
                 val uriBuilder = URIBuilder()
-                return uriBuilder.setScheme("http").setHost(host).setPort(port).setPath(path).build()
+                return uriBuilder.setScheme("https").setHost(host).setPort(port).setPath(path).build()
         } catch (exception: URISyntaxException) {
             logger.error("Error occurred while building Uri")
             throw IllegalStateException("Error creating URI")
@@ -123,24 +123,13 @@ class HttpInputClient {
         this.httpClient = httpClient
     }
 
-    fun publish(input: HttpInput): HttpInputResponse {
-        try {
-
-            val response = execute(input)
-            return HttpInputResponse(response, RestStatus.OK.status)
-        } catch (ex: Exception) {
-            logger.error("Exception publishing Input: $input", ex)
-            throw IllegalStateException(ex)
-        }
-    }
-
     /**
      * This function is created in order to prevent NetPermission error to occur, all
      * the required actions are nested in this function.
      */
-    fun privilegedPublish(httpInput: HttpInput): HttpInputResponse {
-        return AccessController.doPrivileged(PrivilegedAction<HttpInputResponse>({
-            this.publish(httpInput)
-        } as () -> HttpInputResponse))
+    fun publish(httpInput: HttpInput): String {
+        return AccessController.doPrivileged(PrivilegedAction<String> {
+            this.execute(httpInput)
+        })
     }
 }
