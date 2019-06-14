@@ -21,6 +21,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.client.config.RequestConfig
 import org.elasticsearch.common.unit.TimeValue
 import org.apache.http.client.methods.HttpGet
+import org.elasticsearch.common.Strings
 import java.security.AccessController
 import java.security.PrivilegedAction
 
@@ -82,7 +83,7 @@ class HttpInputClient {
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
         var uri: URI?
         val httpGetRequest = HttpGet()
-        uri = buildUri(input.host, input.port, input.path)
+        uri = buildUri(input.scheme, input.host, input.port, input.path)
         httpGetRequest.uri = uri
         return httpClient.execute(httpGetRequest)
     }
@@ -91,10 +92,14 @@ class HttpInputClient {
      * URI building function to fit my parameters from HttpInput, should be modified later to support other types of URI better
      */
     @Throws(Exception::class)
-    private fun buildUri(host: String?, port: Int, path: String?): URI {
+    private fun buildUri(scheme: String?, host: String?, port: Int, path: String?): URI {
         try {
                 val uriBuilder = URIBuilder()
-                return uriBuilder.setScheme("https").setHost(host).setPort(port).setPath(path).build()
+            if (Strings.isNullOrEmpty(scheme)) {
+                uriBuilder.setScheme("https")
+            } else
+                uriBuilder.setScheme(scheme)
+            return uriBuilder.setHost(host).setPort(port).setPath(path).build()
         } catch (exception: URISyntaxException) {
             logger.error("Error occurred while building Uri")
             throw IllegalStateException("Error creating URI")

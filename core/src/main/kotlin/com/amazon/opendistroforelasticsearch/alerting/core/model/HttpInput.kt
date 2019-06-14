@@ -11,7 +11,7 @@ import java.io.IOException
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-data class HttpInput(val host: String, val port: Int, val path: String?, val body: String?) : Input {
+data class HttpInput(val scheme: String, val host: String, val port: Int, val path: String?, val body: String?) : Input {
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
@@ -23,11 +23,11 @@ data class HttpInput(val host: String, val port: Int, val path: String?, val bod
                 .endObject()
                 .endObject()
     }
-// Probably need to change the name for this
     override fun name(): String {
         return HTTP_FIELD
     }
     companion object {
+        const val SCHEME_FIELD = "scheme"
         const val HOST_FIELD = "host"
         const val PORT_FIELD = "port"
         const val PATH_FIELD = "path"
@@ -35,8 +35,12 @@ data class HttpInput(val host: String, val port: Int, val path: String?, val bod
         const val HTTP_FIELD = "http"
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("http"), CheckedFunction { parseInner(it) })
 
+        /**
+         * This parse function uses XContentParser to parse JSON input and store corresponding fields to create a HttpInput object
+         */
         @JvmStatic @Throws(IOException::class)
         private fun parseInner(xcp: XContentParser): HttpInput {
+            var scheme = "http"
             var host = ""
             var port: Int = -1
             var path: String? = null
@@ -47,6 +51,11 @@ data class HttpInput(val host: String, val port: Int, val path: String?, val bod
                 val fieldName = xcp.currentName()
                 xcp.nextToken()
                 when (fieldName) {
+                    SCHEME_FIELD -> {
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
+                                xcp::getTokenLocation)
+                        scheme = xcp.text()
+                    }
                     HOST_FIELD -> {
                         XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
                                 xcp::getTokenLocation)
@@ -69,8 +78,8 @@ data class HttpInput(val host: String, val port: Int, val path: String?, val bod
                     }
                 }
             }
-            // Check whether each field has value then decide how to create object
-            return HttpInput(host, port, path, body)
+            // TODO: Check whether each field has value then decide how to create object
+            return HttpInput(scheme, host, port, path, body)
         }
     }
 }
