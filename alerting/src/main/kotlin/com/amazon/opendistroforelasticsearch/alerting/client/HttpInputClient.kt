@@ -65,6 +65,20 @@ class HttpInputClient {
         } as () -> CloseableHttpClient))
     }
 
+    fun setHttpClient(httpClient: CloseableHttpClient) {
+        this.httpClient = httpClient
+    }
+
+    /**
+     * This function is created in order to prevent NetPermission error to occur, all
+     * the required actions are nested in this function.
+     */
+    fun publish(httpInput: HttpInput): String {
+        return AccessController.doPrivileged(PrivilegedAction<String> {
+            this.execute(httpInput)
+        })
+    }
+
     @Throws(Exception::class)
     fun execute(input: HttpInput): String {
         var response: CloseableHttpResponse? = null
@@ -83,26 +97,35 @@ class HttpInputClient {
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
         var uri: URI?
         val httpGetRequest = HttpGet()
-        uri = buildUri(input.scheme, input.host, input.port, input.path)
+        uri = buildUri(input.scheme, input.host, input.port, input.path, input.url)
         httpGetRequest.uri = uri
         return httpClient.execute(httpGetRequest)
     }
 
-    /**
-     * URI building function to fit my parameters from HttpInput, should be modified later to support other types of URI better
-     */
     @Throws(Exception::class)
-    private fun buildUri(scheme: String?, host: String?, port: Int, path: String?): URI {
+    private fun buildUri(scheme: String?, host: String?, port: Int, path: String?, url: String?): URI {
         try {
-                val uriBuilder = URIBuilder()
-            if (Strings.isNullOrEmpty(scheme)) {
-                uriBuilder.setScheme("https")
-            } else
-                uriBuilder.setScheme(scheme)
-            return uriBuilder.setHost(host).setPort(port).setPath(path).build()
+            val uriBuilder = URIBuilder(url)
+            if (Strings.isNullOrEmpty(url)) {
+                if (Strings.isNullOrEmpty(scheme)) {
+                    uriBuilder.setScheme("https")
+                } else
+                    uriBuilder.setScheme(scheme)
+                uriBuilder.setHost(host).setPort(port).setPath(path)
+            }
+            return uriBuilder.build()
         } catch (exception: URISyntaxException) {
             logger.error("Error occurred while building Uri")
             throw IllegalStateException("Error creating URI")
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun validateResponseStatus(response: HttpResponse) {
+        val statusCode = response.statusLine.statusCode
+
+        if (!VALID_RESPONSE_STATUS.contains(statusCode)) {
+            throw IOException("Failed: $response")
         }
     }
 
@@ -114,27 +137,5 @@ class HttpInputClient {
         logger.debug("Http response: $responseString")
 
         return responseString
-    }
-
-    @Throws(IOException::class)
-    private fun validateResponseStatus(response: HttpResponse) {
-        val statusCode = response.statusLine.statusCode
-
-        if (!VALID_RESPONSE_STATUS.contains(statusCode)) {
-            throw IOException("Failed: $response")
-        }
-    }
-    fun setHttpClient(httpClient: CloseableHttpClient) {
-        this.httpClient = httpClient
-    }
-
-    /**
-     * This function is created in order to prevent NetPermission error to occur, all
-     * the required actions are nested in this function.
-     */
-    fun publish(httpInput: HttpInput): String {
-        return AccessController.doPrivileged(PrivilegedAction<String> {
-            this.execute(httpInput)
-        })
     }
 }

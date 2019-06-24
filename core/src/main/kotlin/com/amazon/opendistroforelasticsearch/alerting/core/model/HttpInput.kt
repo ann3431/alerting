@@ -11,7 +11,7 @@ import java.io.IOException
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-data class HttpInput(val scheme: String, val host: String, val port: Int, val path: String?, val body: String?) : Input {
+data class HttpInput(val scheme: String, val host: String?, val port: Int, val path: String?, val body: String?, val url: String?) : Input {
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
@@ -20,6 +20,7 @@ data class HttpInput(val scheme: String, val host: String, val port: Int, val pa
                 .field(PORT_FIELD, port)
                 .field(PATH_FIELD, path)
                 .field(BODY_FIELD, body)
+                .field(URL_FIELD, url)
                 .endObject()
                 .endObject()
     }
@@ -32,6 +33,7 @@ data class HttpInput(val scheme: String, val host: String, val port: Int, val pa
         const val PORT_FIELD = "port"
         const val PATH_FIELD = "path"
         const val BODY_FIELD = "body"
+        const val URL_FIELD = "url"
         const val HTTP_FIELD = "http"
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("http"), CheckedFunction { parseInner(it) })
 
@@ -41,10 +43,11 @@ data class HttpInput(val scheme: String, val host: String, val port: Int, val pa
         @JvmStatic @Throws(IOException::class)
         private fun parseInner(xcp: XContentParser): HttpInput {
             var scheme = "http"
-            var host = ""
+            var host: String? = ""
             var port: Int = -1
-            var path: String? = null
-            var body: String? = null
+            var path: String? = ""
+            var body: String? = ""
+            var url: String? = null
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -76,10 +79,14 @@ data class HttpInput(val scheme: String, val host: String, val port: Int, val pa
                                 xcp::getTokenLocation)
                         body = xcp.text()
                     }
+                    URL_FIELD -> {
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
+                                xcp::getTokenLocation)
+                        url = xcp.text()
+                    }
                 }
             }
-            // TODO: Check whether each field has value then decide how to create object
-            return HttpInput(scheme, host, port, path, body)
+                return HttpInput(scheme, host, port, path, body, url)
         }
     }
 }
