@@ -73,7 +73,7 @@ class HttpInputClient {
      * This function is created in order to prevent NetPermission error to occur, all
      * the required actions are nested in this function.
      */
-    fun publish(httpInput: HttpInput): String {
+    fun performRequest(httpInput: HttpInput): String {
         return AccessController.doPrivileged(PrivilegedAction<String> {
             this.execute(httpInput)
         })
@@ -124,7 +124,7 @@ class HttpInputClient {
     private fun validateResponseStatus(response: HttpResponse) {
         val statusCode = response.statusLine.statusCode
 
-        if (!VALID_RESPONSE_STATUS.contains(statusCode)) {
+        if (statusCode !in VALID_RESPONSE_STATUS) {
             throw IOException("Failed: $response")
         }
     }

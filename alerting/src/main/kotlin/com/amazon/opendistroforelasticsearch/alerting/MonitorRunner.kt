@@ -296,7 +296,7 @@ class MonitorRunner(
                     }
                     is HttpInput -> {
                         val httpInputClient = HttpInputClient()
-                        val httpInputResponse = httpInputClient.publish(input)
+                        val httpInputResponse = httpInputClient.performRequest(input)
                         val httpInputResponseParser = XContentType.JSON.xContent().createParser(
                                 xContentRegistry, LoggingDeprecationHandler.INSTANCE, httpInputResponse)
                         results.add(httpInputResponseParser.map())
