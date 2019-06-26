@@ -16,6 +16,7 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
                 .startObject(HTTP_FIELD)
+                .field(SCHEME_FIELD,scheme)
                 .field(HOST_FIELD, host)
                 .field(PORT_FIELD, port)
                 .field(PATH_FIELD, path)
