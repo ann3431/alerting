@@ -11,7 +11,7 @@ import java.io.IOException
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-data class HttpInput(val scheme: String, val host: String?, val port: Int, val path: String?, val body: String?, val url: String?) : Input {
+data class HttpInput(val scheme: String, val host: String?, val port: Int, val path: String?, val body: String?, val url: String?, val connection_timeout: Int?) : Input {
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
@@ -22,6 +22,7 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
                 .field(PATH_FIELD, path)
                 .field(BODY_FIELD, body)
                 .field(URL_FIELD, url)
+                .field(CONNECTION_TIMEOUT_FIELD, connection_timeout)
                 .endObject()
                 .endObject()
     }
@@ -35,6 +36,7 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
         const val PATH_FIELD = "path"
         const val BODY_FIELD = "body"
         const val URL_FIELD = "url"
+        const val CONNECTION_TIMEOUT_FIELD = "connection_timeout"
         const val HTTP_FIELD = "http"
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("http"), CheckedFunction { parseInner(it) })
 
@@ -49,6 +51,7 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
             var path: String? = ""
             var body: String? = ""
             var url: String? = null
+            var connectionTimeout = 10
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -85,9 +88,14 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
                                 xcp::getTokenLocation)
                         url = xcp.text()
                     }
+                    CONNECTION_TIMEOUT_FIELD -> {
+                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_NUMBER, xcp.currentToken(),
+                                xcp::getTokenLocation)
+                        connectionTimeout = xcp.intValue()
+                    }
                 }
             }
-                return HttpInput(scheme, host, port, path, body, url)
+                return HttpInput(scheme, host, port, path, body, url, connectionTimeout)
         }
     }
 }
