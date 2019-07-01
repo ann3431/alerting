@@ -107,6 +107,7 @@ class MonitorRunner(
 ) : JobRunner, CoroutineScope, AbstractLifecycleComponent() {
 
     private val logger = LogManager.getLogger(MonitorRunner::class.java)
+    private val httpInputClient = HttpInputClient()
 
     private lateinit var runnerSupervisor: Job
     override val coroutineContext: CoroutineContext
@@ -295,7 +296,6 @@ class MonitorRunner(
                         results += searchResponse.convertToMap()
                     }
                     is HttpInput -> {
-                        val httpInputClient = HttpInputClient()
                         val httpInputResponse = httpInputClient.performRequest(input)
                         val httpInputResponseParser = XContentType.JSON.xContent().createParser(
                                 xContentRegistry, LoggingDeprecationHandler.INSTANCE, httpInputResponse)

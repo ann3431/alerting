@@ -1,22 +1,30 @@
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
-import org.elasticsearch.common.ParseField
 import org.elasticsearch.common.CheckedFunction
+import org.elasticsearch.common.ParseField
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
-import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.ToXContent
+import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentParser
 import org.elasticsearch.common.xcontent.XContentParserUtils
 import java.io.IOException
+
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-data class HttpInput(val scheme: String, val host: String?, val port: Int, val path: String?, val body: String?, val url: String?, val connection_timeout: Int?) : Input {
-
+data class HttpInput(
+    val scheme: String,
+    val host: String?,
+    val port: Int,
+    val path: String?,
+    val body: String?,
+    val url: String?,
+    val connection_timeout: Int?
+) : Input {
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
                 .startObject(HTTP_FIELD)
-                .field(SCHEME_FIELD,scheme)
+                .field(SCHEME_FIELD, scheme)
                 .field(HOST_FIELD, host)
                 .field(PORT_FIELD, port)
                 .field(PATH_FIELD, path)
@@ -50,7 +58,7 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
             var port: Int = -1
             var path: String? = ""
             var body: String? = ""
-            var url: String? = null
+            var url: String? = ""
             var connectionTimeout = 10
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
