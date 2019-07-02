@@ -81,11 +81,7 @@ class HttpInputClient {
     fun execute(input: HttpInput): String {
         var response: CloseableHttpResponse? = null
         try {
-<<<<<<< HEAD
             // TODO: First configure settings according to input
-
-=======
->>>>>>> parent of 57b57eb... Added connection_timeput field to HttpInput
             response = getHttpResponse(input)
             validateResponseStatus(response)
             return getResponseString(response)

@@ -1,7 +1,6 @@
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
-import org.apache.http.client.utils.URIBuilder
-import org.apache.commons.validator.rputines.UrlValidator
+
 import org.elasticsearch.common.CheckedFunction
 import org.elasticsearch.common.ParseField
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
@@ -14,7 +13,6 @@ import java.io.IOException
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
  */
-<<<<<<< HEAD
 data class HttpInput(
     val scheme: String,
     val host: String?,
@@ -24,16 +22,6 @@ data class HttpInput(
     var url: String?,
     val connection_timeout: Int
 ) : Input {
-    init {
-        //Check if url is not empty or null
-        // val uriBuilder = URIBuilder
-        val urlValidator = URLValidator()
-        
-=======
-data class HttpInput(val scheme: String, val host: String?, val port: Int, val path: String?, val body: String?, val url: String?) : Input {
->>>>>>> parent of 57b57eb... Added connection_timeput field to HttpInput
-
-    }
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
                 .startObject(HTTP_FIELD)
@@ -69,12 +57,8 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
             var port: Int = -1
             var path: String? = ""
             var body: String? = ""
-<<<<<<< HEAD
             var url: String? = ""
             var connectionTimeout = 10
-=======
-            var url: String? = null
->>>>>>> parent of 57b57eb... Added connection_timeput field to HttpInput
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -113,7 +97,7 @@ data class HttpInput(val scheme: String, val host: String?, val port: Int, val p
                     }
                 }
             }
-                return HttpInput(scheme, host, port, path, body, url)
+                return HttpInput(scheme, host, port, path, body, url, connectionTimeout)
         }
     }
 }
