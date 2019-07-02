@@ -97,22 +97,24 @@ class HttpInputClient {
     @Throws(Exception::class)
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
         var uri: URI?
-        val httpGetRequest = HttpGet()
-        uri = buildUri(input.scheme, input.host, input.port, input.path, input.url)
-        httpGetRequest.uri = uri
+        val requestConfig = RequestConfig.custom()
+                .setConnectTimeout(input.connection_timeout).setSocketTimeout(input.socket_timeout).build()
+        uri = buildUri(input)
+        val httpGetRequest = HttpGet(uri)
+        httpGetRequest.config = requestConfig
         return httpClient.execute(httpGetRequest)
     }
 
     @Throws(Exception::class)
-    private fun buildUri(scheme: String?, host: String?, port: Int, path: String?, url: String?): URI {
+    private fun buildUri(input: HttpInput): URI {
         try {
-            val uriBuilder = URIBuilder(url)
-            if (Strings.isNullOrEmpty(url)) {
-                if (Strings.isNullOrEmpty(scheme)) {
+            val uriBuilder = URIBuilder(input.url)
+            if (Strings.isNullOrEmpty(input.url)) {
+                if (Strings.isNullOrEmpty(input.scheme)) {
                     uriBuilder.setScheme("https")
                 } else
-                    uriBuilder.setScheme(scheme)
-                uriBuilder.setHost(host).setPort(port).setPath(path)
+                    uriBuilder.setScheme(input.scheme)
+                uriBuilder.setHost(input.host).setPort(input.port).setPath(input.path)
             }
             return uriBuilder.build()
         } catch (exception: URISyntaxException) {
