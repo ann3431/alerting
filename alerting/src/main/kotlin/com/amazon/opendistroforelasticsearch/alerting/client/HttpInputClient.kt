@@ -68,8 +68,8 @@ class HttpInputClient {
     }
 
     /**
-     * This function is created in order to prevent NetPermission error to occur.
-     * What this does is to run execute() as a privileged action so that it will not run into NetPermission error or SocketPermission error etc.
+     * This function is created in order to prevent NetPermission error to occur, all
+     * the required actions are nested in this function.
      */
     fun performRequest(httpInput: HttpInput): String {
         return AccessController.doPrivileged(PrivilegedAction<String> {
@@ -81,8 +81,11 @@ class HttpInputClient {
     fun execute(input: HttpInput): String {
         var response: CloseableHttpResponse? = null
         try {
+<<<<<<< HEAD
             // TODO: First configure settings according to input
 
+=======
+>>>>>>> parent of 57b57eb... Added connection_timeput field to HttpInput
             response = getHttpResponse(input)
             validateResponseStatus(response)
             return getResponseString(response)
