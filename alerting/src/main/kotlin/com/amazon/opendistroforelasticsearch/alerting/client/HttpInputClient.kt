@@ -82,6 +82,7 @@ class HttpInputClient {
         var response: CloseableHttpResponse? = null
         try {
             // TODO: First configure settings according to input
+
             response = getHttpResponse(input)
             validateResponseStatus(response)
             return getResponseString(response)
@@ -95,6 +96,8 @@ class HttpInputClient {
     @Throws(Exception::class)
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
         var uri: URI?
+        val requestConfig = RequestConfig.custom()
+                .setConnectTimeout(input.connection_timeout).setSocketTimeout(1000).build()
         val httpGetRequest = HttpGet()
         uri = buildUri(input.scheme, input.host, input.port, input.path, input.url)
         httpGetRequest.uri = uri

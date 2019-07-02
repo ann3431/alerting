@@ -1,5 +1,7 @@
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
+import org.apache.http.client.utils.URIBuilder
+import org.apache.commons.validator.rputines.UrlValidator
 import org.elasticsearch.common.CheckedFunction
 import org.elasticsearch.common.ParseField
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
@@ -18,9 +20,16 @@ data class HttpInput(
     val port: Int,
     val path: String?,
     val body: String?,
-    val url: String?,
-    val connection_timeout: Int?
+    var url: String?,
+    val connection_timeout: Int
 ) : Input {
+    init {
+        //Check if url is not empty or null
+        // val uriBuilder = URIBuilder
+        val urlValidator = URLValidator()
+        
+
+    }
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
                 .startObject(HTTP_FIELD)
