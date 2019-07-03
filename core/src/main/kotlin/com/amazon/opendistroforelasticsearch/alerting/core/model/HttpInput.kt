@@ -23,7 +23,7 @@ data class HttpInput(
     val host: String?,
     val port: Int,
     val path: String?,
-    val params: Map<String, String>,
+    val params: Map<String, String>?,
     val body: SearchSourceBuilder?,
     var url: String,
     val connection_timeout: Int,
