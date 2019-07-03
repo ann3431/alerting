@@ -1,53 +1,51 @@
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
-import junit.framework.Assert.fail
-import java.lang.IllegalArgumentException
+import org.elasticsearch.test.ESTestCase
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class HttpInputTest {
+class HttpInputTest : ESTestCase() {
     // Test invalid url with different format in one function
     @Test
     fun `test invalid urls`() {
         try {
             // Invalid scheme
-            val invalidSchemeHttpInput = HttpInput("htttttp", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
+            HttpInput("htttttp", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
             fail("Invalid scheme when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
         try {
             // Invalid host
-            val invalidHostHttpInput = HttpInput("http", "locohost", 9200, "_cluster/health", null, null, "", 5000, 5000)
+            HttpInput("http", "locohost", 9200, "_cluster/health", null, null, "", 5000, 5000)
             fail("Invalid host when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
         try {
             // Invalid port
-            val invalidPortHttpInput = HttpInput("http", "localhost", -1, "_cluster/health", null, null, "", 5000, 5000)
+            HttpInput("http", "localhost", -1, "_cluster/health", null, null, "", 5000, 5000)
             fail("Invalid port when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
         try {
             // Invalid path
-            val invalidPathHttpInput = HttpInput("http", "localhost", 9200, "////////", null, null, "", 5000, 5000)
+            HttpInput("http", "localhost", 9200, "////////", null, null, "", 5000, 5000)
             fail("Invalid path when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
         try {
             // Invalid url
-            val invalidUrlHttpInput = HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
+            HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
             fail("Invalid url when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
         try {
             // Invalid connection timeout
-            val invalidConnectionTimeoutHttpInput = HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", -5000, 5000)
+            HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", -5000, 5000)
             fail("Invalid connection timeout when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
         try {
             // Invalid socket timeout
-            val invalidSocketTimeoutHttpInput = HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, -5000)
+            HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, -5000)
             fail("Invalid socket timeout when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
