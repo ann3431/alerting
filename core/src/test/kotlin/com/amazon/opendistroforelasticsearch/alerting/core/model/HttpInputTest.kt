@@ -2,10 +2,12 @@ package com.amazon.opendistroforelasticsearch.alerting.core.model
 
 import junit.framework.Assert.fail
 import java.lang.IllegalArgumentException
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class HttpInputTest {
     // Test invalid url with different format in one function
+    @Test
     fun `test invalid urls`() {
         try {
             // Invalid scheme
@@ -51,6 +53,7 @@ class HttpInputTest {
         }
     }
     // Test valid url field by field
+    @Test
     fun `test valid url`() {
         val validHttpInput = HttpInput("", "", -1, "", null, null, "http://localhost:9200/_cluster/health/", 5000, 5000)
         assertEquals(validHttpInput.url, "http://localhost:9200/_cluster/health/")
