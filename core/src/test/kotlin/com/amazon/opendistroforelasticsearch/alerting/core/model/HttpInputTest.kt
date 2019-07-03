@@ -31,18 +31,6 @@ class HttpInputTest {
             fail("Invalid path when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
-        /** try {
-            // Invalid params
-            val invalidParamsHttpInput = HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
-            fail("Invalid params when creating HttpInput should fail.")
-        } catch (e: IllegalArgumentException) {
-        }
-        try {
-            // Invalid body
-            val invalidBodyHttpInput = HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
-            fail("Invalid body when creating HttpInput should fail.")
-        } catch (e: IllegalArgumentException) {
-        } */
         try {
             // Invalid url
             val invalidUrlHttpInput = HttpInput("http", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
