@@ -2,10 +2,7 @@ package com.amazon.opendistroforelasticsearch.alerting.client
 
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import org.apache.http.HttpResponse
-import java.net.URI
 import java.lang.Exception
-import java.net.URISyntaxException
-import org.apache.http.client.utils.URIBuilder
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import java.io.IOException
@@ -21,7 +18,6 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.client.config.RequestConfig
 import org.elasticsearch.common.unit.TimeValue
 import org.apache.http.client.methods.HttpGet
-import org.elasticsearch.common.Strings
 import java.security.AccessController
 import java.security.PrivilegedAction
 
@@ -83,7 +79,6 @@ class HttpInputClient {
     fun execute(input: HttpInput): String {
         var response: CloseableHttpResponse? = null
         try {
-            // TODO: First configure settings according to input
             response = getHttpResponse(input)
             validateResponseStatus(response)
             return getResponseString(response)
@@ -94,33 +89,17 @@ class HttpInputClient {
         }
     }
 
+    /**
+     * Creates a Http GET request with configuration provided by HttpInput and executes the request
+     * @return CloseableHttpResponse The response from GET request.
+     */
     @Throws(Exception::class)
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
-        var uri: URI?
         val requestConfig = RequestConfig.custom()
                 .setConnectTimeout(input.connection_timeout).setSocketTimeout(input.socket_timeout).build()
-        uri = buildUri(input)
-        val httpGetRequest = HttpGet(uri)
+        val httpGetRequest = HttpGet(input.url)
         httpGetRequest.config = requestConfig
         return httpClient.execute(httpGetRequest)
-    }
-
-    @Throws(Exception::class)
-    private fun buildUri(input: HttpInput): URI {
-        try {
-            val uriBuilder = URIBuilder(input.url)
-            if (Strings.isNullOrEmpty(input.url)) {
-                if (Strings.isNullOrEmpty(input.scheme)) {
-                    uriBuilder.setScheme("https")
-                } else
-                    uriBuilder.setScheme(input.scheme)
-                uriBuilder.setHost(input.host).setPort(input.port).setPath(input.path)
-            }
-            return uriBuilder.build()
-        } catch (exception: URISyntaxException) {
-            logger.error("Error occurred while building Uri")
-            throw IllegalStateException("Error creating URI")
-        }
     }
 
     @Throws(IOException::class)
