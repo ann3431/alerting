@@ -17,6 +17,7 @@ package com.amazon.opendistroforelasticsearch.alerting
 
 import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertError
 import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertIndices
+import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import com.amazon.opendistroforelasticsearch.alerting.core.model.IntervalSchedule
 import com.amazon.opendistroforelasticsearch.alerting.model.Alert
 import com.amazon.opendistroforelasticsearch.alerting.model.Alert.State.ACKNOWLEDGED
@@ -32,6 +33,7 @@ import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.rest.RestStatus
 import org.elasticsearch.script.Script
 import org.elasticsearch.search.builder.SearchSourceBuilder
+import java.io.IOException
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -624,6 +626,15 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         // assert trigger exists for alert
         val trigger = monitor.triggers.single { it.id == alert.triggerId }
         assertEquals(trigger.name, alert.triggerName)
+    }
+
+    fun `test monitor with non JSON response HttpInput`() {
+        try {
+            val monitor = randomMonitor(inputs = listOf(HttpInput("http", "localhost", 9200, "_cat/indices", null, null, "", 5000, 5000)))
+            executeMonitor(monitor.id)
+            fail("HttpInput that receives non JSON format response should fail.")
+        } catch (e: IOException) {
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

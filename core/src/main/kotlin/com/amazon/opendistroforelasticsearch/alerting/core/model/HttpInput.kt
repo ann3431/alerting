@@ -13,7 +13,6 @@ import org.elasticsearch.common.xcontent.XContentParser
 import org.elasticsearch.common.xcontent.XContentParserUtils
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import java.io.IOException
-import java.net.URISyntaxException
 
 /**
  * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
@@ -52,12 +51,17 @@ data class HttpInput(
             "(%[0-9A-Fa-f]{2}|[-()_.!~*';/?:@&=+$,A-Za-z0-9])+)" +
                     "([).!';/?:,][[:blank:]])?$"""".toRegex()
             require(regex.matches(url)) { "Invalid URL: $url" }
-        } catch (exception: URISyntaxException) {
-            logger.error("Error occurred while building Uri")
-            throw IllegalStateException("Error creating URI")
-        }
-        require(!(Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(host))) {
+            require(!(Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(host))) {
                 "Url or Host name must be provided."
+            }
+            require(connection_timeout > 0) {
+                "Connection timeout: $connection_timeout is not greater than 0."
+            }
+            require(socket_timeout > 0) {
+                "Socket timeout: $socket_timeout is not greater than 0."
+            }
+        } catch (exception: IllegalArgumentException) {
+            logger.error("Error occurred while creating HttpInput")
         }
     }
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
