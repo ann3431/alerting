@@ -2,28 +2,23 @@ package com.amazon.opendistroforelasticsearch.alerting.client
 
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import org.apache.http.HttpResponse
-import java.net.URI
-import java.lang.Exception
-import java.net.URISyntaxException
-import org.apache.http.client.utils.URIBuilder
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.util.EntityUtils
-import java.io.IOException
-import org.apache.logging.log4j.LogManager
-import org.elasticsearch.rest.RestStatus
-import java.util.Arrays
-import java.util.HashSet
-import java.util.Collections
+import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.client.config.RequestConfig
+import org.apache.http.util.EntityUtils
+import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.unit.TimeValue
-import org.apache.http.client.methods.HttpGet
-import org.elasticsearch.common.Strings
+import org.elasticsearch.rest.RestStatus
+import java.io.IOException
 import java.security.AccessController
 import java.security.PrivilegedAction
+import java.util.Arrays
+import java.util.Collections
+import java.util.HashSet
 
 /**
  * This class takes HttpInputs and perform GET requests to given URIs
@@ -70,8 +65,8 @@ class HttpInputClient {
     }
 
     /**
-     * This function is created in order to prevent NetPermission error to occur, all
-     * the required actions are nested in this function.
+     * This function is created in order to prevent NetPermission error to occur.
+     * What this does is to run execute() as a privileged action so that it will not run into NetPermission error or SocketPermission error etc.
      */
     fun performRequest(httpInput: HttpInput): String {
         return AccessController.doPrivileged(PrivilegedAction<String> {
@@ -93,31 +88,17 @@ class HttpInputClient {
         }
     }
 
+    /**
+     * Creates a Http GET request with configuration provided by HttpInput and executes the request
+     * @return CloseableHttpResponse The response from GET request.
+     */
     @Throws(Exception::class)
     fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
-        var uri: URI?
-        val httpGetRequest = HttpGet()
-        uri = buildUri(input.scheme, input.host, input.port, input.path, input.url)
-        httpGetRequest.uri = uri
+        val requestConfig = RequestConfig.custom()
+                .setConnectTimeout(input.connection_timeout).setSocketTimeout(input.socket_timeout).build()
+        val httpGetRequest = HttpGet(input.url)
+        httpGetRequest.config = requestConfig
         return httpClient.execute(httpGetRequest)
-    }
-
-    @Throws(Exception::class)
-    private fun buildUri(scheme: String?, host: String?, port: Int, path: String?, url: String?): URI {
-        try {
-            val uriBuilder = URIBuilder(url)
-            if (Strings.isNullOrEmpty(url)) {
-                if (Strings.isNullOrEmpty(scheme)) {
-                    uriBuilder.setScheme("https")
-                } else
-                    uriBuilder.setScheme(scheme)
-                uriBuilder.setHost(host).setPort(port).setPath(path)
-            }
-            return uriBuilder.build()
-        } catch (exception: URISyntaxException) {
-            logger.error("Error occurred while building Uri")
-            throw IllegalStateException("Error creating URI")
-        }
     }
 
     @Throws(IOException::class)
