@@ -2,24 +2,23 @@ package com.amazon.opendistroforelasticsearch.alerting.client
 
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import org.apache.http.HttpResponse
-import java.lang.Exception
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.util.EntityUtils
-import java.io.IOException
-import org.apache.logging.log4j.LogManager
-import org.elasticsearch.rest.RestStatus
-import java.util.Arrays
-import java.util.HashSet
-import java.util.Collections
+import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.client.config.RequestConfig
+import org.apache.http.util.EntityUtils
+import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.unit.TimeValue
-import org.apache.http.client.methods.HttpGet
+import org.elasticsearch.rest.RestStatus
+import java.io.IOException
 import java.security.AccessController
 import java.security.PrivilegedAction
+import java.util.Arrays
+import java.util.Collections
+import java.util.HashSet
 
 /**
  * This class takes HttpInputs and perform GET requests to given URIs

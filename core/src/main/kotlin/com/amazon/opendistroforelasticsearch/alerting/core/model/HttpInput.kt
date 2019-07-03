@@ -1,18 +1,18 @@
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
-import org.elasticsearch.common.ParseField
+import org.apache.http.client.utils.URIBuilder
+import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.CheckedFunction
+import org.elasticsearch.common.ParseField
 import org.elasticsearch.common.Strings
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
-import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.ToXContent
+import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentParser
 import org.elasticsearch.common.xcontent.XContentParserUtils
-import java.io.IOException
-import org.apache.http.client.utils.URIBuilder
-import org.apache.logging.log4j.LogManager
 import org.elasticsearch.search.builder.SearchSourceBuilder
+import java.io.IOException
 import java.net.URISyntaxException
 
 /**
