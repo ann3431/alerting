@@ -1,15 +1,16 @@
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
-import org.elasticsearch.test.ESTestCase
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
-class HttpInputTest : ESTestCase() {
+class HttpInputTest {
     // Test invalid url with different format in one function
     @Test
     fun `test invalid urls`() {
         try {
             // Invalid scheme
-            HttpInput("htttttp", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
+            HttpInput("notAValidScheme", "localhost", 9200, "_cluster/health", null, null, "", 5000, 5000)
             fail("Invalid scheme when creating HttpInput should fail.")
         } catch (e: IllegalArgumentException) {
         }
