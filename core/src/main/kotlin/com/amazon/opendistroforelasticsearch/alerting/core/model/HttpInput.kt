@@ -61,7 +61,8 @@ data class HttpInput(
                 "Socket timeout: $socket_timeout is not greater than 0."
             }
         } catch (exception: IllegalArgumentException) {
-            logger.error("Error occurred while creating HttpInput")
+                logger.error("Error occurred while creating HttpInput")
+            throw IllegalArgumentException("Error occurred while creating HttpInput")
         }
     }
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
