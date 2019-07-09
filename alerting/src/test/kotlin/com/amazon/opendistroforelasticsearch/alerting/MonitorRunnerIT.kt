@@ -584,6 +584,22 @@ class MonitorRunnerIT : AlertingRestTestCase() {
                 actionResults2[actionThrottleEnabled.id]!!.lastExecutionTime)
     }
 
+    fun `test monitor with non JSON response HttpInput`() {
+        try {
+            val monitor = randomMonitor(inputs = listOf(HttpInput(scheme = "http",
+                    host = "localhost",
+                    port = 9200,
+                    path = "_cat/indices",
+                    params = mapOf(),
+                    url = "",
+                    connection_timeout = 5000,
+                    socket_timeout = 5000)))
+            executeMonitor(monitor.id)
+            fail("HttpInput that receives non JSON format response should fail.")
+        } catch (e: IOException) {
+        }
+    }
+
     private fun verifyActionExecutionResultInAlert(alert: Alert, expectedResult: Map<String, Int>):
             MutableMap<String, ActionExecutionResult> {
         val actionResult = mutableMapOf<String, ActionExecutionResult>()
@@ -626,15 +642,6 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         // assert trigger exists for alert
         val trigger = monitor.triggers.single { it.id == alert.triggerId }
         assertEquals(trigger.name, alert.triggerName)
-    }
-
-    fun `test monitor with non JSON response HttpInput`() {
-        try {
-            val monitor = randomMonitor(inputs = listOf(HttpInput("http", "localhost", 9200, "_cat/indices", null, null, "", 5000, 5000)))
-            executeMonitor(monitor.id)
-            fail("HttpInput that receives non JSON format response should fail.")
-        } catch (e: IOException) {
-        }
     }
 
     @Suppress("UNCHECKED_CAST")

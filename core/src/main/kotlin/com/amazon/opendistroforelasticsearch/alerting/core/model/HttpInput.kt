@@ -1,5 +1,21 @@
+/*
+ *   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
+ */
+
 package com.amazon.opendistroforelasticsearch.alerting.core.model
 
+import org.apache.commons.validator.routines.UrlValidator
 import org.apache.http.client.utils.URIBuilder
 import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.CheckedFunction
@@ -11,60 +27,51 @@ import org.elasticsearch.common.xcontent.ToXContent
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentParser
 import org.elasticsearch.common.xcontent.XContentParserUtils
-import org.elasticsearch.search.builder.SearchSourceBuilder
 import java.io.IOException
 
 /**
- * This class is a "Http" type of input that supports user to enter a Http location in order to perform actions such as monitoring another cluster's health information
+ * This is a data class of "Http" type of input for Monitors.
  */
 data class HttpInput(
     val scheme: String,
     val host: String?,
     val port: Int,
     val path: String?,
-    val params: Map<String, String>?,
-    val body: SearchSourceBuilder?,
+    val params: Map<String, String>,
     var url: String,
     val connection_timeout: Int,
     val socket_timeout: Int
 ) : Input {
     private val logger = LogManager.getLogger(HttpInput::class.java)
-    // Verify that url is valid during creation
+
+    // Verify parameters are valid during creation
     init {
-        try {
-            if (Strings.isNullOrEmpty(url)) {
-                val uriBuilder = URIBuilder()
-                if (Strings.isNullOrEmpty(scheme)) {
-                    uriBuilder.scheme = "https"
-                } else
-                    uriBuilder.scheme = scheme
-                if (params != null) {
-                    for (e in params.entries)
-                        uriBuilder.addParameter(e.key, e.value)
-                }
-                uriBuilder.setHost(host).setPort(port).setPath(path)
-                // If uri created by fields is valid, set url field to the uri constructed
-                url = uriBuilder.toString()
-            }
-            // Use regular expression to verify url
-            val regex = """^((((https?)://)|(mailto:|news:))" +
-            "(%[0-9A-Fa-f]{2}|[-()_.!~*';/?:@&=+$,A-Za-z0-9])+)" +
-                    "([).!';/?:,][[:blank:]])?$"""".toRegex()
-            require(regex.matches(url)) { "Invalid URL: $url" }
-            require(!(Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(host))) {
-                "Url or Host name must be provided."
-            }
-            require(connection_timeout > 0) {
-                "Connection timeout: $connection_timeout is not greater than 0."
-            }
-            require(socket_timeout > 0) {
-                "Socket timeout: $socket_timeout is not greater than 0."
-            }
-        } catch (exception: IllegalArgumentException) {
-                logger.error("Error occurred while creating HttpInput")
-            throw IllegalArgumentException("Error occurred while creating HttpInput")
+        // Create an UrlValidator that only accepts "http" and "https" as valid scheme and allows local URLs.
+        val urlValidator = UrlValidator(arrayOf("http", "https"), UrlValidator.ALLOW_LOCAL_URLS)
+
+        // Build url field by field if not provided as whole, and update url field.
+        if (Strings.isNullOrEmpty(url)) {
+            val uriBuilder = URIBuilder()
+            uriBuilder.scheme = scheme
+            uriBuilder.host = host
+            uriBuilder.port = port
+            uriBuilder.path = path
+            for (e in params.entries)
+                uriBuilder.addParameter(e.key, e.value)
+            url = uriBuilder.build().toString()
+        }
+
+        require(urlValidator.isValid(url)) {
+            "Invalid url: $url"
+        }
+        require(connection_timeout > 0) {
+            "Connection timeout: $connection_timeout is not greater than 0."
+        }
+        require(socket_timeout > 0) {
+            "Socket timeout: $socket_timeout is not greater than 0."
         }
     }
+
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
                 .startObject(HTTP_FIELD)
@@ -73,27 +80,28 @@ data class HttpInput(
                 .field(PORT_FIELD, port)
                 .field(PATH_FIELD, path)
                 .field(PARAMS_FIELD, this.params)
-                .field(BODY_FIELD, body)
                 .field(URL_FIELD, url)
                 .field(CONNECTION_TIMEOUT_FIELD, connection_timeout)
                 .field(SOCKET_TIMEOUT_FIELD, socket_timeout)
                 .endObject()
                 .endObject()
     }
+
     override fun name(): String {
         return HTTP_FIELD
     }
+
     companion object {
         const val SCHEME_FIELD = "scheme"
         const val HOST_FIELD = "host"
         const val PORT_FIELD = "port"
         const val PATH_FIELD = "path"
         const val PARAMS_FIELD = "params"
-        const val BODY_FIELD = "body"
         const val URL_FIELD = "url"
         const val CONNECTION_TIMEOUT_FIELD = "connection_timeout"
         const val SOCKET_TIMEOUT_FIELD = "socket_timeout"
         const val HTTP_FIELD = "http"
+
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("http"), CheckedFunction { parseInner(it) })
 
         /**
@@ -106,60 +114,27 @@ data class HttpInput(
             var port: Int = -1
             var path: String? = null
             var params: Map<String, String> = mutableMapOf()
-            var body = SearchSourceBuilder()
-            var url: String = ""
-            var connectionTimeout = TimeValue.timeValueSeconds(5).millis().toInt()
-            var socketTimeout = TimeValue.timeValueSeconds(50).millis().toInt()
+            var url = ""
+            var connectionTimeout = TimeValue.timeValueSeconds(10).millis().toInt()
+            var socketTimeout = TimeValue.timeValueSeconds(10).millis().toInt()
+
             XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp::getTokenLocation)
 
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                 val fieldName = xcp.currentName()
                 xcp.nextToken()
                 when (fieldName) {
-                    SCHEME_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        scheme = xcp.text()
-                    }
-                    HOST_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        host = xcp.text()
-                    }
-                    PORT_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_NUMBER, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        port = xcp.intValue()
-                    }
-                    PATH_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        path = xcp.text()
-                    }
-                    BODY_FIELD -> {
-                        body = SearchSourceBuilder.fromXContent(xcp, false)
-                    }
-                    PARAMS_FIELD -> {
-                        params = xcp.mapStrings()
-                    }
-                    URL_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_STRING, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        url = xcp.text()
-                    }
-                    CONNECTION_TIMEOUT_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_NUMBER, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        connectionTimeout = xcp.intValue()
-                    }
-                    SOCKET_TIMEOUT_FIELD -> {
-                        XContentParserUtils.ensureExpectedToken(XContentParser.Token.VALUE_NUMBER, xcp.currentToken(),
-                                xcp::getTokenLocation)
-                        socketTimeout = xcp.intValue()
-                    }
+                    SCHEME_FIELD -> scheme = xcp.text()
+                    HOST_FIELD -> host = xcp.text()
+                    PORT_FIELD -> port = xcp.intValue()
+                    PATH_FIELD -> path = xcp.text()
+                    PARAMS_FIELD -> params = xcp.mapStrings()
+                    URL_FIELD -> url = xcp.text()
+                    CONNECTION_TIMEOUT_FIELD -> connectionTimeout = xcp.intValue()
+                    SOCKET_TIMEOUT_FIELD -> socketTimeout = xcp.intValue()
                 }
             }
-                return HttpInput(scheme, host, port, path, params, body, url, connectionTimeout, socketTimeout)
+            return HttpInput(scheme, host, port, path, params, url, connectionTimeout, socketTimeout)
         }
     }
 }

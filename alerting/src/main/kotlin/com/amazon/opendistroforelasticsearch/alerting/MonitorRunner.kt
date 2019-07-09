@@ -296,12 +296,9 @@ class MonitorRunner(
                     }
                     is HttpInput -> {
                         val httpInputClient = HttpInputClient()
-                        val httpInputResponse = httpInputClient.performRequest(input)
-                        val httpInputResponseParser = XContentType.JSON.xContent().createParser(
-                                xContentRegistry, LoggingDeprecationHandler.INSTANCE, httpInputResponse)
-                        results.add(httpInputResponseParser.map())
-                    }
-                    else -> {
+                        val httpInputResultMap = httpInputClient.collectHttpInputResultAsMap(input)
+                        results.add(httpInputResultMap)
+                    } else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
                     }
                 }
