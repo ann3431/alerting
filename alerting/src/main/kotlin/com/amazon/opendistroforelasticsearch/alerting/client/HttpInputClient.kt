@@ -38,9 +38,10 @@ import java.util.Collections
 import java.util.HashSet
 
 /**
- * This class takes HttpInputs and performs GET requests to given URIs
+ * This class takes [HttpInput]s and performs GET requests to given URIs.
  */
 class HttpInputClient {
+    private var httpClient = createHttpClient()
 
     private val logger = LogManager.getLogger(HttpInputClient::class.java)
 
@@ -59,8 +60,6 @@ class HttpInputClient {
                     RestStatus.RESET_CONTENT.status,
                     RestStatus.PARTIAL_CONTENT.status,
                     RestStatus.MULTI_STATUS.status)))
-
-    private var httpClient = createHttpClient()
 
     private fun createHttpClient(): CloseableHttpClient {
         val config = RequestConfig.custom()
@@ -85,12 +84,8 @@ class HttpInputClient {
     }
 
     /**
-     * This function is created for testing purpose.
+     * Collect results from [HttpInput] and convert result to a Map<String, Any> object.
      */
-    fun setHttpClient(httpClient: CloseableHttpClient) {
-        this.httpClient = httpClient
-    }
-
     fun collectHttpInputResultAsMap(input: HttpInput): Map<String, Any> {
         val httpInputResponse = performRequest(input)
         val httpInputResponseParser = XContentType.JSON.xContent().createParser(
@@ -99,7 +94,7 @@ class HttpInputClient {
     }
 
     /**
-     * This function provides a centralized place to perform the [httpClient].execute() function as a [PrivilegedAction] to avoid NetPermission errors.
+     * This function provides a centralized place to perform the [HttpInputClient].execute() function as a [PrivilegedAction] to avoid NetPermission errors.
     */
     fun performRequest(httpInput: HttpInput): String {
         return AccessController.doPrivileged(PrivilegedAction<String> {
@@ -123,7 +118,7 @@ class HttpInputClient {
     }
 
     /**
-     * Creates a Http GET request with configuration provided by HttpInput and executes the request
+     * Creates a HTTP GET request with configuration provided by [HttpInput] and executes the request
      * @return CloseableHttpResponse The response from GET request.
      */
     @Throws(Exception::class)
