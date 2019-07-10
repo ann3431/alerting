@@ -600,6 +600,21 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         }
     }
 
+    fun `test monitor with valid HttpInput`() {
+        val monitor = createMonitor(randomMonitor(inputs = listOf(HttpInput(scheme = "http",
+                host = "localhost",
+                port = 9200,
+                path = "_cluster/health",
+                params = mapOf(),
+                url = "",
+                connection_timeout = 5000,
+                socket_timeout = 5000))))
+        val response = executeMonitor(monitor.id)
+
+        val output = entityAsMap(response)
+        assertEquals(monitor.name, output["monitor_name"])
+    }
+
     private fun verifyActionExecutionResultInAlert(alert: Alert, expectedResult: Map<String, Int>):
             MutableMap<String, ActionExecutionResult> {
         val actionResult = mutableMapOf<String, ActionExecutionResult>()

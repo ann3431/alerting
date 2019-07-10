@@ -46,6 +46,12 @@ data class HttpInput(
 
     // Verify parameters are valid during creation
     init {
+        require(connection_timeout > 0) {
+            "Connection timeout: $connection_timeout is not greater than 0."
+        }
+        require(socket_timeout > 0) {
+            "Socket timeout: $socket_timeout is not greater than 0."
+        }
         // Create an UrlValidator that only accepts "http" and "https" as valid scheme and allows local URLs.
         val urlValidator = UrlValidator(arrayOf("http", "https"), UrlValidator.ALLOW_LOCAL_URLS)
 
@@ -63,12 +69,6 @@ data class HttpInput(
 
         require(urlValidator.isValid(url)) {
             "Invalid url: $url"
-        }
-        require(connection_timeout > 0) {
-            "Connection timeout: $connection_timeout is not greater than 0."
-        }
-        require(socket_timeout > 0) {
-            "Socket timeout: $socket_timeout is not greater than 0."
         }
     }
 

@@ -72,6 +72,8 @@ class HttpInputClient {
         val connectionManager = PoolingHttpClientConnectionManager()
         connectionManager.maxTotal = MAX_CONNECTIONS
         connectionManager.defaultMaxPerRoute = MAX_CONNECTIONS_PER_ROUTE
+
+        // Create HttpClient as a PrivilegedAction in order to avoid java.net.NetPerission error.
         return AccessController.doPrivileged(PrivilegedAction<CloseableHttpClient>({
             HttpClientBuilder.create()
                     .setDefaultRequestConfig(config)
@@ -113,6 +115,7 @@ class HttpInputClient {
             validateResponseStatus(response)
             return getResponseString(response)
         } finally {
+            // Consume entity no matter what the status code is.
             if (response != null) {
                 EntityUtils.consumeQuietly(response.entity)
             }
@@ -138,6 +141,7 @@ class HttpInputClient {
     private fun validateResponseStatus(response: HttpResponse) {
         val statusCode = response.statusLine.statusCode
         if (statusCode !in VALID_RESPONSE_STATUS) {
+            logger.error("HttpInputClient failed to get valid response status, response message: $response")
             throw IOException("HttpInputClient failed to get valid response status, response message: $response")
         }
     }
