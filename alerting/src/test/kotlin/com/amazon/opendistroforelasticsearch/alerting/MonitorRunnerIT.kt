@@ -584,31 +584,18 @@ class MonitorRunnerIT : AlertingRestTestCase() {
                 actionResults2[actionThrottleEnabled.id]!!.lastExecutionTime)
     }
 
-    fun `test monitor with non JSON response HttpInput`() {
+    fun `test monitor HttpInput with non JSON response `() {
         try {
-            val monitor = randomMonitor(inputs = listOf(HttpInput(scheme = "http",
-                    host = "localhost",
-                    port = 9200,
-                    path = "_cat/indices",
-                    params = mapOf(),
-                    url = "",
-                    connection_timeout = 5000,
-                    socket_timeout = 5000)))
+            val input = listOf(randomHttpInput(path = "_cat/indices"))
+            val monitor = randomMonitor(inputs = input)
             executeMonitor(monitor.id)
             fail("HttpInput that receives non JSON format response should fail.")
         } catch (e: IOException) {
         }
     }
 
-    fun `test monitor with valid HttpInput`() {
-        val monitor = createMonitor(randomMonitor(inputs = listOf(HttpInput(scheme = "http",
-                host = "localhost",
-                port = 9200,
-                path = "_cluster/health",
-                params = mapOf(),
-                url = "",
-                connection_timeout = 5000,
-                socket_timeout = 5000))))
+    fun `test monitor HttpInput with JSON response`() {
+        val monitor = createMonitor(randomMonitor(inputs = listOf(randomHttpInput())))
         val response = executeMonitor(monitor.id)
 
         val output = entityAsMap(response)
