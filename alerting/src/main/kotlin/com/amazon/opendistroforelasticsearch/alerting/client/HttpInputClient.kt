@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.common.xcontent.LoggingDeprecationHandler
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
+import org.elasticsearch.common.xcontent.XContentParser
 import org.elasticsearch.common.xcontent.XContentType
 import org.elasticsearch.rest.RestStatus
 import java.io.IOException
@@ -84,21 +85,12 @@ class HttpInputClient {
     }
 
     /**
-     * Collect results from [HttpInput] and convert result to a Map<String, Any> object.
-     */
-    fun collectHttpInputResultAsMap(input: HttpInput): Map<String, Any> {
-        val httpInputResponse = performRequest(input)
-        val httpInputResponseParser = XContentType.JSON.xContent().createParser(
-                NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, httpInputResponse)
-        return httpInputResponseParser.map()
-    }
-
-    /**
      * This function provides a centralized place to perform the [HttpInputClient].execute() function as a [PrivilegedAction] to avoid NetPermission errors.
     */
-    fun performRequest(httpInput: HttpInput): String {
-        return AccessController.doPrivileged(PrivilegedAction<String> {
-            this.execute(httpInput)
+    fun performRequest(httpInput: HttpInput): XContentParser {
+        return AccessController.doPrivileged(PrivilegedAction<XContentParser> {
+            XContentType.JSON.xContent().createParser(
+                    NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, this.execute(httpInput))
         })
     }
 

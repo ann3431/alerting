@@ -17,7 +17,6 @@ package com.amazon.opendistroforelasticsearch.alerting
 
 import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertError
 import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertIndices
-import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import com.amazon.opendistroforelasticsearch.alerting.core.model.IntervalSchedule
 import com.amazon.opendistroforelasticsearch.alerting.core.model.SearchInput
 import com.amazon.opendistroforelasticsearch.alerting.model.ActionExecutionResult

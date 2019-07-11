@@ -68,23 +68,24 @@ fun randomMonitor(
 }
 
 fun randomHttpInput(
-        scheme: String = "http",
-        host: String = ESRestTestCase.randomAlphaOfLength(10),
-        port: Int = randomInt(65535),
-        path: String = ESRestTestCase.randomAlphaOfLength(10),
-        params: Map<String, String> = mapOf(),
-        url: String = "",
-        connection_timeout: Int = randomInt(10000),
-        socket_timeout: Int = randomInt(10000)
+    scheme: String = "http",
+    host: String = ESRestTestCase.randomAlphaOfLength(10),
+    port: Int = randomInt(65535),
+    path: String = ESRestTestCase.randomAlphaOfLength(10),
+    params: Map<String, String> = mapOf(),
+    url: String = "",
+    connection_timeout: Int = randomInt(10000),
+    socket_timeout: Int = randomInt(10000)
 ): HttpInput {
-    return HttpInput(scheme = scheme,
-            host = host,
-            port = port,
-            path = path,
-            params = params,
-            url = url,
-            connection_timeout = connection_timeout,
-            socket_timeout = socket_timeout)
+    return HttpInput(
+        scheme = scheme,
+        host = host,
+        port = port,
+        path = path,
+        params = params,
+        url = url,
+        connection_timeout = connection_timeout,
+        socket_timeout = socket_timeout)
 }
 
 fun randomTrigger(

@@ -296,8 +296,8 @@ class MonitorRunner(
                     }
                     is HttpInput -> {
                         val httpInputClient = HttpInputClient()
-                        val httpInputResultMap = httpInputClient.collectHttpInputResultAsMap(input)
-                        results.add(httpInputResultMap)
+                        val httpResponse = httpInputClient.performRequest(input)
+                        results += httpResponse.map()
                     } else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
                     }
