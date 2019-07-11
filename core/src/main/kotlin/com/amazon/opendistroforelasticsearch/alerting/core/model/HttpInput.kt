@@ -29,7 +29,7 @@ import org.elasticsearch.common.xcontent.XContentParserUtils
 import java.io.IOException
 
 /**
- * This is a data class of "Http" type of input for Monitors.
+ * This is a data class of HTTP type of input for Monitors.
  */
 data class HttpInput(
     val scheme: String,
@@ -105,7 +105,7 @@ data class HttpInput(
         val XCONTENT_REGISTRY = NamedXContentRegistry.Entry(Input::class.java, ParseField("http"), CheckedFunction { parseInner(it) })
 
         /**
-         * This parse function uses XContentParser to parse JSON input and store corresponding fields to create a HttpInput object
+         * This parse function uses [XContentParser] to parse JSON input and store corresponding fields to create a [HttpInput] object
          */
         @JvmStatic @Throws(IOException::class)
         private fun parseInner(xcp: XContentParser): HttpInput {
