@@ -75,7 +75,7 @@ class HttpInputClient {
         connectionManager.maxTotal = MAX_CONNECTIONS
         connectionManager.defaultMaxPerRoute = MAX_CONNECTIONS_PER_ROUTE
 
-        // Create HttpClient as a PrivilegedAction in order to avoid java.net.NetPerission error.
+        // Create HttpClient as a PrivilegedAction in order to avoid java.net.NetPermission error.
         return AccessController.doPrivileged(PrivilegedAction<CloseableHttpClient>({
             HttpClientBuilder.create()
                     .setDefaultRequestConfig(config)
