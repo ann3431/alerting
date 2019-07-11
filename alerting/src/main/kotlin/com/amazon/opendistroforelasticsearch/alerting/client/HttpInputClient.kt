@@ -44,7 +44,6 @@ import java.util.HashSet
  * This class takes [HttpInput]s and performs GET requests to given URIs.
  */
 class HttpInputClient {
-    private val httpClient = createHttpClient()
 
     private val logger = LogManager.getLogger(HttpInputClient::class.java)
 
@@ -53,7 +52,6 @@ class HttpInputClient {
     private val MAX_CONNECTIONS_PER_ROUTE = 20
     private val TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
     private val SOCKET_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
-
     private val VALID_RESPONSE_STATUS = Collections.unmodifiableSet(HashSet(
             listOf(RestStatus.OK.status,
                     RestStatus.CREATED.status,
@@ -63,6 +61,8 @@ class HttpInputClient {
                     RestStatus.RESET_CONTENT.status,
                     RestStatus.PARTIAL_CONTENT.status,
                     RestStatus.MULTI_STATUS.status)))
+
+    private val httpClient = createHttpClient()
 
     private fun createHttpClient(): CloseableHttpClient {
         val config = RequestConfig.custom()
