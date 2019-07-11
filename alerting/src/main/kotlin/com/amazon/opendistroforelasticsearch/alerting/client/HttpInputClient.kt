@@ -20,12 +20,14 @@ import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.utils.URIBuilder
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import org.apache.logging.log4j.LogManager
+import org.elasticsearch.common.Strings
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.common.xcontent.LoggingDeprecationHandler
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
@@ -42,7 +44,7 @@ import java.util.HashSet
  * This class takes [HttpInput]s and performs GET requests to given URIs.
  */
 class HttpInputClient {
-    private var httpClient = createHttpClient()
+    private val httpClient = createHttpClient()
 
     private val logger = LogManager.getLogger(HttpInputClient::class.java)
 
@@ -119,7 +121,20 @@ class HttpInputClient {
                 .setConnectTimeout(input.connection_timeout)
                 .setSocketTimeout(input.socket_timeout)
                 .build()
-        val httpGetRequest = HttpGet(input.url)
+        // If url field is null or empty, construct an url field by field.
+        val constructedUrl = if (Strings.isNullOrEmpty(input.url)) {
+            val uriBuilder = URIBuilder()
+            uriBuilder.scheme = input.scheme
+            uriBuilder.host = input.host
+            uriBuilder.port = input.port
+            uriBuilder.path = input.path
+            for (e in input.params.entries)
+                uriBuilder.addParameter(e.key, e.value)
+            uriBuilder.build().toString()
+        } else {
+            input.url
+        }
+        val httpGetRequest = HttpGet(constructedUrl)
         httpGetRequest.config = requestConfig
         return httpClient.execute(httpGetRequest)
     }

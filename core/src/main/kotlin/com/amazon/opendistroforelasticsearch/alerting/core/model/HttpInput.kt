@@ -38,12 +38,10 @@ data class HttpInput(
     val port: Int,
     val path: String?,
     val params: Map<String, String>,
-    var url: String,
+    val url: String,
     val connection_timeout: Int,
     val socket_timeout: Int
 ) : Input {
-    private val logger = LogManager.getLogger(HttpInput::class.java)
-
     // Verify parameters are valid during creation
     init {
         require(connection_timeout > 0) {
@@ -52,11 +50,12 @@ data class HttpInput(
         require(socket_timeout > 0) {
             "Socket timeout: $socket_timeout is not greater than 0."
         }
+
         // Create an UrlValidator that only accepts "http" and "https" as valid scheme and allows local URLs.
         val urlValidator = UrlValidator(arrayOf("http", "https"), UrlValidator.ALLOW_LOCAL_URLS)
 
         // Build url field by field if not provided as whole, and update url field.
-        if (Strings.isNullOrEmpty(url)) {
+        val constructedUrl = if (Strings.isNullOrEmpty(url)) {
             val uriBuilder = URIBuilder()
             uriBuilder.scheme = scheme
             uriBuilder.host = host
@@ -64,11 +63,13 @@ data class HttpInput(
             uriBuilder.path = path
             for (e in params.entries)
                 uriBuilder.addParameter(e.key, e.value)
-            url = uriBuilder.build().toString()
+            uriBuilder.build().toString()
+        } else {
+            url
         }
 
-        require(urlValidator.isValid(url)) {
-            "Invalid url: $url"
+        require(urlValidator.isValid(constructedUrl)) {
+            "Invalid url: $constructedUrl"
         }
     }
 
