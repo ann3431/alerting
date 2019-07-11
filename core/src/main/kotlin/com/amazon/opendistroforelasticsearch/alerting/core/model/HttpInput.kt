@@ -17,7 +17,6 @@ package com.amazon.opendistroforelasticsearch.alerting.core.model
 
 import org.apache.commons.validator.routines.UrlValidator
 import org.apache.http.client.utils.URIBuilder
-import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.CheckedFunction
 import org.elasticsearch.common.ParseField
 import org.elasticsearch.common.Strings
