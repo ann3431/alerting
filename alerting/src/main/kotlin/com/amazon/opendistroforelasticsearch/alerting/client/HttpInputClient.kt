@@ -16,15 +16,14 @@
 package com.amazon.opendistroforelasticsearch.alerting.client
 
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
+import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
 import org.apache.http.client.config.RequestConfig
-import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler
-import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
 import org.apache.http.util.EntityUtils
 import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.Strings
@@ -44,7 +43,6 @@ import java.util.HashSet
  * This class takes [HttpInput]s and performs GET requests to given URIs.
  */
 class HttpInputClient {
-    private val httpClient = createHttpClient()
 
     private val logger = LogManager.getLogger(HttpInputClient::class.java)
 
@@ -53,6 +51,10 @@ class HttpInputClient {
     private val MAX_CONNECTIONS_PER_ROUTE = 20
     private val TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
     private val SOCKET_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
+
+    val host = HttpHost("http://localhost:9200")
+    val httpClient = createHttpClient()
+
 
     private val VALID_RESPONSE_STATUS = Collections.unmodifiableSet(HashSet(
             listOf(RestStatus.OK.status,
@@ -64,7 +66,7 @@ class HttpInputClient {
                     RestStatus.PARTIAL_CONTENT.status,
                     RestStatus.MULTI_STATUS.status)))
 
-    private fun createHttpClient(): CloseableHttpClient {
+    private fun createHttpClient(): CloseableHttpAsyncClient {
         val config = RequestConfig.custom()
                 .setConnectTimeout(TIMEOUT_MILLISECONDS)
                 .setConnectionRequestTimeout(TIMEOUT_MILLISECONDS)
@@ -75,15 +77,15 @@ class HttpInputClient {
         connectionManager.maxTotal = MAX_CONNECTIONS
         connectionManager.defaultMaxPerRoute = MAX_CONNECTIONS_PER_ROUTE
 
+
+
         // Create HttpClient as a PrivilegedAction in order to avoid java.net.NetPermission error.
-        return AccessController.doPrivileged(PrivilegedAction<CloseableHttpClient>({
-            HttpClientBuilder.create()
-                    .setDefaultRequestConfig(config)
-                    .setConnectionManager(connectionManager)
-                    .setRetryHandler(DefaultHttpRequestRetryHandler())
-                    .useSystemProperties()
-                    .build()
-        } as () -> CloseableHttpClient))
+        return AccessController.doPrivileged(PrivilegedAction<CloseableHttpAsyncClient>({
+                HttpAsyncClientBuilder.create()
+                        .setDefaultRequestConfig(config)
+                        .useSystemProperties()
+                        .build()
+        } as () -> CloseableHttpAsyncClient))
     }
 
     /**
@@ -98,15 +100,16 @@ class HttpInputClient {
 
     @Throws(Exception::class)
     fun execute(input: HttpInput): String {
-        var response: CloseableHttpResponse? = null
+        var response = ""
         try {
             response = getHttpResponse(input)
-            validateResponseStatus(response)
-            return getResponseString(response)
+//            validateResponseStatus(response)
+            return response
+//            return getResponseString(response)
         } finally {
             // Consume entity no matter what the status code is.
             if (response != null) {
-                EntityUtils.consumeQuietly(response.entity)
+//                EntityUtils.consumeQuietly("")
             }
         }
     }
@@ -116,7 +119,7 @@ class HttpInputClient {
      * @return CloseableHttpResponse The response from GET request.
      */
     @Throws(Exception::class)
-    fun getHttpResponse(input: HttpInput): CloseableHttpResponse {
+    fun getHttpResponse(input: HttpInput): String {
         val requestConfig = RequestConfig.custom()
                 .setConnectTimeout(input.connection_timeout)
                 .setSocketTimeout(input.socket_timeout)
@@ -136,7 +139,25 @@ class HttpInputClient {
         }
         val httpGetRequest = HttpGet(constructedUrl)
         httpGetRequest.config = requestConfig
-        return httpClient.execute(httpGetRequest)
+//        httpClient.execute(HttpHost(input.host), httpGetRequest)
+        return ""
+    }
+
+    fun getRequest(input: HttpInput): HttpGet {
+        val constructedUrl = if (Strings.isNullOrEmpty(input.url)) {
+            val uriBuilder = URIBuilder()
+            uriBuilder.scheme = input.scheme
+            uriBuilder.host = input.host
+            uriBuilder.port = input.port
+            uriBuilder.path = input.path
+            for (e in input.params.entries)
+                uriBuilder.addParameter(e.key, e.value)
+            uriBuilder.build().toString()
+        } else {
+            input.url
+        }
+        logger.info("Constructed url: $constructedUrl")
+        return HttpGet(constructedUrl)
     }
 
     @Throws(IOException::class)
@@ -149,7 +170,7 @@ class HttpInputClient {
     }
 
     @Throws(IOException::class)
-    fun getResponseString(response: CloseableHttpResponse): String {
+    fun getResponseString(response: HttpResponse): String {
         val entity = response.entity ?: return "{}"
 
         val responseString = EntityUtils.toString(entity)

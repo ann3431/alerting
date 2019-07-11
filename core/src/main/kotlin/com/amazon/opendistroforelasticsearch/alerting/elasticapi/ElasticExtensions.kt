@@ -15,7 +15,18 @@
 
 package com.amazon.opendistroforelasticsearch.alerting.elasticapi
 
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancelFutureOnCancellation
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.HttpResponse
+import org.apache.http.client.methods.HttpUriRequest
+import org.apache.http.concurrent.FutureCallback
+import org.apache.http.nio.client.HttpAsyncClient
+import org.apache.http.util.EntityUtils
 import org.apache.logging.log4j.Logger
 import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.action.ActionListener
@@ -24,6 +35,8 @@ import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.action.search.ShardSearchFailure
 import org.elasticsearch.client.ElasticsearchClient
 import org.elasticsearch.common.bytes.BytesReference
+import org.elasticsearch.common.xcontent.LoggingDeprecationHandler
+import org.elasticsearch.common.xcontent.NamedXContentRegistry
 import org.elasticsearch.common.xcontent.ToXContent
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentHelper
@@ -35,6 +48,8 @@ import org.elasticsearch.rest.RestStatus.BAD_GATEWAY
 import org.elasticsearch.rest.RestStatus.GATEWAY_TIMEOUT
 import org.elasticsearch.rest.RestStatus.SERVICE_UNAVAILABLE
 import java.time.Instant
+import java.util.concurrent.CompletableFuture
+import javax.swing.text.html.parser.Entity
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -145,3 +160,27 @@ suspend fun <C : ElasticsearchClient, T> C.suspendUntil(block: C.(ActionListener
             override fun onFailure(e: Exception) = cont.resumeWithException(e)
         })
     }
+
+suspend fun <C: HttpAsyncClient, T> C.suspendUntil2(block: C.(FutureCallback<T>) -> Unit): T =
+    suspendCancellableCoroutine { cont ->
+        block(object: FutureCallback<T> {
+            override fun cancelled() {
+                cont.resumeWith(Result.failure(CancellationException("Request cancelled")))
+            }
+
+            override fun completed(result: T) {
+                cont.resume(result)
+            }
+
+            override fun failed(ex: java.lang.Exception) {
+                cont.resumeWithException(ex)
+            }
+
+        })
+    }
+
+fun HttpResponse.toMap(): Map<String, Any> {
+    val xcp = XContentType.JSON.xContent().createParser(
+            NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE, EntityUtils.toString(this.entity))
+    return xcp.map()
+}

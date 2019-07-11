@@ -28,6 +28,8 @@ import com.amazon.opendistroforelasticsearch.alerting.elasticapi.convertToMap
 import com.amazon.opendistroforelasticsearch.alerting.elasticapi.firstFailureOrNull
 import com.amazon.opendistroforelasticsearch.alerting.elasticapi.retry
 import com.amazon.opendistroforelasticsearch.alerting.elasticapi.suspendUntil
+import com.amazon.opendistroforelasticsearch.alerting.elasticapi.suspendUntil2
+import com.amazon.opendistroforelasticsearch.alerting.elasticapi.toMap
 import com.amazon.opendistroforelasticsearch.alerting.model.ActionExecutionResult
 import com.amazon.opendistroforelasticsearch.alerting.model.ActionRunResult
 import com.amazon.opendistroforelasticsearch.alerting.model.Alert
@@ -59,6 +61,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.apache.http.HttpHost
+import org.apache.http.HttpResponse
 import org.apache.logging.log4j.LogManager
 import org.elasticsearch.ExceptionsHelper
 import org.elasticsearch.action.DocWriteRequest
@@ -296,8 +300,9 @@ class MonitorRunner(
                     }
                     is HttpInput -> {
                         val httpInputClient = HttpInputClient()
-                        val httpResponse = httpInputClient.performRequest(input)
-                        results += httpResponse.map()
+                        httpInputClient.httpClient.start()
+                        val response: HttpResponse = httpInputClient.httpClient.suspendUntil2 { httpInputClient.httpClient.execute(httpInputClient.getRequest(input), it) }
+                        results += response.toMap()
                     } else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
                     }
