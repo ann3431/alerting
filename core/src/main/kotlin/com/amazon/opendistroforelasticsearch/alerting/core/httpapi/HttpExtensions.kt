@@ -10,18 +10,16 @@ import org.apache.http.client.utils.URIBuilder
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.nio.client.HttpAsyncClient
 import org.apache.http.util.EntityUtils
-import org.elasticsearch.action.get.GetRequest
 import org.elasticsearch.common.Strings
 import org.elasticsearch.common.xcontent.LoggingDeprecationHandler
 import org.elasticsearch.common.xcontent.NamedXContentRegistry
 import org.elasticsearch.common.xcontent.XContentType
-import java.lang.Exception
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-suspend fun <C: HttpAsyncClient, T> C.suspendUntil2(block: C.(FutureCallback<T>) -> Unit): T =
+suspend fun <C : HttpAsyncClient, T> C.suspendUntil2(block: C.(FutureCallback<T>) -> Unit): T =
         suspendCancellableCoroutine { cont ->
-            block(object: FutureCallback<T> {
+            block(object : FutureCallback<T> {
                 override fun cancelled() {
                     cont.resumeWith(Result.failure(CancellationException("Request cancelled")))
                 }
@@ -33,7 +31,6 @@ suspend fun <C: HttpAsyncClient, T> C.suspendUntil2(block: C.(FutureCallback<T>)
                 override fun failed(ex: Exception) {
                     cont.resumeWithException(ex)
                 }
-
             })
         }
 
@@ -65,6 +62,3 @@ fun HttpInput.toGetRequest(): HttpGet {
     httpGetRequest.config = requestConfig
     return httpGetRequest
 }
-
-
-

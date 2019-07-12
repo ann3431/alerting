@@ -301,7 +301,8 @@ class MonitorRunner(
                     }
                     is HttpInput -> {
                         httpClient.httpClient.start()
-                        val response: HttpResponse = httpClient.httpClient.suspendUntil2 { httpClient.httpClient.execute(input.toGetRequest(), it) }
+                        val response: HttpResponse = httpClient.httpClient.suspendUntil2 {
+                            httpClient.httpClient.execute(input.toGetRequest(), it) }
                         httpClient.httpClient.close()
                         results += response.toMap()
                     } else -> {
