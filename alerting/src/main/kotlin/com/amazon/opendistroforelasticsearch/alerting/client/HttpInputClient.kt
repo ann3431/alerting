@@ -24,7 +24,7 @@ import java.security.AccessController
 import java.security.PrivilegedAction
 
 /**
- * This class takes [HttpInput]s and performs GET requests to given URIs.
+ * This class takes [HttpInput] and performs GET requests to given URIs.
  */
 class HttpInputClient {
 
