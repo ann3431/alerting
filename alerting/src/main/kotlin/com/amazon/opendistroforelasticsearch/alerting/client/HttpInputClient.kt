@@ -29,8 +29,6 @@ import java.security.PrivilegedAction
 class HttpInputClient {
 
     // TODO: If possible, these settings should be implemented as changeable via the "_cluster/settings" API.
-    private val MAX_CONNECTIONS = 60
-    private val MAX_CONNECTIONS_PER_ROUTE = 20
     private val TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
     private val SOCKET_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
 
