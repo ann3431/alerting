@@ -17,10 +17,8 @@ package com.amazon.opendistroforelasticsearch.alerting.client
 
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import org.apache.http.client.config.RequestConfig
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
-import org.apache.logging.log4j.LogManager
 import org.elasticsearch.common.unit.TimeValue
 import java.security.AccessController
 import java.security.PrivilegedAction
@@ -29,8 +27,6 @@ import java.security.PrivilegedAction
  * This class takes [HttpInput]s and performs GET requests to given URIs.
  */
 class HttpInputClient {
-
-    private val logger = LogManager.getLogger(HttpInputClient::class.java)
 
     // TODO: If possible, these settings should be implemented as changeable via the "_cluster/settings" API.
     private val MAX_CONNECTIONS = 60
@@ -48,10 +44,6 @@ class HttpInputClient {
                 .setConnectionRequestTimeout(TIMEOUT_MILLISECONDS)
                 .setSocketTimeout(SOCKET_TIMEOUT_MILLISECONDS)
                 .build()
-
-        val connectionManager = PoolingHttpClientConnectionManager()
-        connectionManager.maxTotal = MAX_CONNECTIONS
-        connectionManager.defaultMaxPerRoute = MAX_CONNECTIONS_PER_ROUTE
 
         return AccessController.doPrivileged(PrivilegedAction<CloseableHttpAsyncClient>({
             HttpAsyncClientBuilder.create()
