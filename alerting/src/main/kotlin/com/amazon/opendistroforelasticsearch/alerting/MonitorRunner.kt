@@ -20,6 +20,9 @@ import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertIndices
 import com.amazon.opendistroforelasticsearch.alerting.alerts.moveAlerts
 import com.amazon.opendistroforelasticsearch.alerting.client.HttpInputClient
 import com.amazon.opendistroforelasticsearch.alerting.core.JobRunner
+import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.suspendUntil2
+import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.toGetRequest
+import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.toMap
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
 import com.amazon.opendistroforelasticsearch.alerting.core.model.ScheduledJob
 import com.amazon.opendistroforelasticsearch.alerting.core.model.ScheduledJob.Companion.SCHEDULED_JOBS_INDEX
@@ -59,6 +62,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.apache.http.HttpResponse
 import org.apache.logging.log4j.LogManager
 import org.elasticsearch.ExceptionsHelper
 import org.elasticsearch.action.DocWriteRequest
@@ -107,6 +111,7 @@ class MonitorRunner(
 ) : JobRunner, CoroutineScope, AbstractLifecycleComponent() {
 
     private val logger = LogManager.getLogger(MonitorRunner::class.java)
+    private val httpClient = HttpInputClient()
 
     private lateinit var runnerSupervisor: Job
     override val coroutineContext: CoroutineContext
@@ -295,9 +300,10 @@ class MonitorRunner(
                         results += searchResponse.convertToMap()
                     }
                     is HttpInput -> {
-                        val httpInputClient = HttpInputClient()
-                        val httpResponse = httpInputClient.performRequest(input)
-                        results += httpResponse.map()
+                        httpClient.httpClient.start()
+                        val response: HttpResponse = httpClient.httpClient.suspendUntil2 { httpClient.httpClient.execute(input.toGetRequest(), it) }
+                        httpClient.httpClient.close()
+                        results += response.toMap()
                     } else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
                     }
