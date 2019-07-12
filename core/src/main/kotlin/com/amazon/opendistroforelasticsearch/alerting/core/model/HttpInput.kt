@@ -41,6 +41,7 @@ data class HttpInput(
     val connection_timeout: Int,
     val socket_timeout: Int
 ) : Input {
+
     // Verify parameters are valid during creation
     init {
         require(connection_timeout > 0) {

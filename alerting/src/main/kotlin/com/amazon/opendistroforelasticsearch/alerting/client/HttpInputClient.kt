@@ -33,6 +33,7 @@ class HttpInputClient {
     private val SOCKET_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
 
     val httpClient = createHttpClient()
+
     /**
      * Create [CloseableHttpAsyncClient] as a [PrivilegedAction] in order to avoid [java.net.NetPermission] error.
      */
