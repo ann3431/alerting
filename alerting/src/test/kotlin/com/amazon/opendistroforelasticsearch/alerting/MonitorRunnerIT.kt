@@ -635,12 +635,9 @@ class MonitorRunnerIT : AlertingRestTestCase() {
 
     fun `test monitor HttpInput with alert triggered`() {
         putAlertMappings() // Required as we do not have a create alert API.
-        val action = randomAction(template = randomTemplateScript("Alert triggered from {{ctx.monitor.name}}!"),
-                destinationId = createDestination().id)
-        val triggerScript = """
+        val trigger = randomTrigger(condition = Script("""
             return ctx.results[0].number_of_pending_tasks < 1
-        """.trimIndent()
-        val trigger = randomTrigger(condition = Script(triggerScript), actions = listOf(action))
+        """.trimIndent()), destinationId = createDestination().id)
         val clusterIndex = randomInt(clusterHosts.size - 1)
         val input = randomHttpInput(
                 scheme = clusterHosts[clusterIndex].schemeName,
@@ -667,10 +664,9 @@ class MonitorRunnerIT : AlertingRestTestCase() {
 
     fun `test monitor HttpInput with no alert triggered`() {
         putAlertMappings() // Required as we do not have a create alert API.
-        val triggerScript = """
+        val trigger = randomTrigger(condition = Script("""
             return ctx.results[0].status.equals("red")
-        """.trimIndent()
-        val trigger = randomTrigger(condition = Script(triggerScript))
+        """.trimIndent()))
         val clusterIndex = randomInt(clusterHosts.size - 1)
         val input = randomHttpInput(
                 scheme = clusterHosts[clusterIndex].schemeName,
