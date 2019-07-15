@@ -17,7 +17,7 @@ import org.elasticsearch.common.xcontent.XContentType
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-suspend fun <C : HttpAsyncClient, T> C.suspendUntil2(block: C.(FutureCallback<T>) -> Unit): T =
+suspend fun <C : HttpAsyncClient, T> C.suspendUntil(block: C.(FutureCallback<T>) -> Unit): T =
         suspendCancellableCoroutine { cont ->
             block(object : FutureCallback<T> {
                 override fun cancelled() {

@@ -20,7 +20,7 @@ import com.amazon.opendistroforelasticsearch.alerting.alerts.AlertIndices
 import com.amazon.opendistroforelasticsearch.alerting.alerts.moveAlerts
 import com.amazon.opendistroforelasticsearch.alerting.client.HttpInputClient
 import com.amazon.opendistroforelasticsearch.alerting.core.JobRunner
-import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.suspendUntil2
+import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.suspendUntil
 import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.toGetRequest
 import com.amazon.opendistroforelasticsearch.alerting.core.httpapi.toMap
 import com.amazon.opendistroforelasticsearch.alerting.core.model.HttpInput
@@ -111,7 +111,6 @@ class MonitorRunner(
 ) : JobRunner, CoroutineScope, AbstractLifecycleComponent() {
 
     private val logger = LogManager.getLogger(MonitorRunner::class.java)
-    private val httpClient = HttpInputClient()
 
     private lateinit var runnerSupervisor: Job
     override val coroutineContext: CoroutineContext
@@ -300,10 +299,11 @@ class MonitorRunner(
                         results += searchResponse.convertToMap()
                     }
                     is HttpInput -> {
-                        httpClient.httpClient.start()
-                        val response: HttpResponse = httpClient.httpClient.suspendUntil2 {
-                            httpClient.httpClient.execute(input.toGetRequest(), it) }
-                        httpClient.httpClient.close()
+                        val httpClient = HttpInputClient()
+                        httpClient.client.start()
+                        val response: HttpResponse = httpClient.client.suspendUntil {
+                            httpClient.client.execute(input.toGetRequest(), it) }
+                        httpClient.client.close()
                         results += response.toMap()
                     } else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")

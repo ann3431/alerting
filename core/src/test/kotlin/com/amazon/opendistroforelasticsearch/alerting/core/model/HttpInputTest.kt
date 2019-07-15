@@ -73,6 +73,8 @@ class HttpInputTest {
     fun `test valid HttpInput using url`() {
         val validHttpInput = HttpInput("", "", -1, "", mapOf(), "http://localhost:9200/_cluster/health/", 5000, 5000)
         assertEquals(validHttpInput.url, "http://localhost:9200/_cluster/health/")
+        assertEquals(validHttpInput.connection_timeout, 5000)
+        assertEquals(validHttpInput.socket_timeout, 5000)
     }
 
     @Test

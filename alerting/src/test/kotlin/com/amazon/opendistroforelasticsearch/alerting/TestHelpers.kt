@@ -69,7 +69,7 @@ fun randomMonitor(
 
 fun randomHttpInput(
     scheme: String = "http",
-    host: String = ESRestTestCase.randomAlphaOfLength(10),
+    host: String = "localhost",
     port: Int = randomInt(65535),
     path: String = ESRestTestCase.randomAlphaOfLength(10),
     params: Map<String, String> = mapOf(),

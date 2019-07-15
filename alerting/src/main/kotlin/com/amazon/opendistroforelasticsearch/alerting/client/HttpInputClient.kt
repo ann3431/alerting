@@ -29,18 +29,19 @@ import java.security.PrivilegedAction
 class HttpInputClient {
 
     // TODO: If possible, these settings should be implemented as changeable via the "_cluster/settings" API.
-    private val TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
+    private val CONNECTION_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
+    private val REQUEST_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
     private val SOCKET_TIMEOUT_MILLISECONDS = TimeValue.timeValueSeconds(10).millis().toInt()
 
-    val httpClient = createHttpClient()
+    val client = createHttpClient()
 
     /**
      * Create [CloseableHttpAsyncClient] as a [PrivilegedAction] in order to avoid [java.net.NetPermission] error.
      */
     private fun createHttpClient(): CloseableHttpAsyncClient {
         val config = RequestConfig.custom()
-                .setConnectTimeout(TIMEOUT_MILLISECONDS)
-                .setConnectionRequestTimeout(TIMEOUT_MILLISECONDS)
+                .setConnectTimeout(CONNECTION_TIMEOUT_MILLISECONDS)
+                .setConnectionRequestTimeout(REQUEST_TIMEOUT_MILLISECONDS)
                 .setSocketTimeout(SOCKET_TIMEOUT_MILLISECONDS)
                 .build()
 
